@@ -174,6 +174,10 @@ export interface i18n
 			title: string;
 			description: string;
 		},
+		includeFonts: {
+			title: string;
+			description: string;
+		},
 		includePluginCSS: {
 			title: string;
 			description: string;

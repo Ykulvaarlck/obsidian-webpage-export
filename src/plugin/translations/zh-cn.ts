@@ -169,6 +169,10 @@ export const language: i18n =
 			title: "使页面离线兼容",
 			description: "下载所有在线资源、图像、脚本，使页面可以离线查看，或者使网站不依赖CDN。"
 		},
+		includeFonts: {
+			title: "Include Fonts",
+			description: "Include the font files used by your theme and Obsidian. These can add several megabytes to the export. When disabled, the page uses system fonts instead."
+		},
 		includePluginCSS: {
 			title: "包含插件的CSS",
 			description: "在导出的HTML中包含以下插件的CSS。如果插件功能未正确呈现，请尝试将插件添加到此列表中。避免无必要添加插件，因为更多的CSS会增加页面的加载时间。"

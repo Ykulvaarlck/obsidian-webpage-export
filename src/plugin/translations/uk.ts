@@ -168,6 +168,10 @@ export const language: i18n =
 			title: "Зробити сумісним офлайн",
 			description: "Завантажити будь-які онлайн-ресурси / зображення / скрипти, щоб сторінку можна було переглядати офлайн. Або щоб веб-сайт не залежав від CDN."
 		},
+		includeFonts: {
+			title: "Include Fonts",
+			description: "Include the font files used by your theme and Obsidian. These can add several megabytes to the export. When disabled, the page uses system fonts instead."
+		},
 		includePluginCSS: {
 			title: "Включити CSS з плагінів",
 			description: "Включити CSS з наступних плагінів в експортований HTML. Якщо функції плагінів не відображаються коректно, спробуйте додати плагін до цього списку. Уникайте додавання плагінів, якщо ви не помітили конкретної проблеми, оскільки більше CSS збільшить час завантаження вашої сторінки."

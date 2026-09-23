@@ -353,6 +353,11 @@ export class SettingsPage extends PluginSettingTab
 			(value) => Settings.exportOptions.offlineResources = value,
 			lang.makeOfflineCompatible.description);
 
+		createToggle(section, lang.includeFonts.title,
+			() => Settings.exportOptions.includeFonts,
+			(value) => Settings.exportOptions.includeFonts = value,
+			lang.includeFonts.description);
+
 		// #endregion
 
 		// #region Obsidian Settings

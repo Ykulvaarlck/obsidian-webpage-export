@@ -158,6 +158,11 @@ export class ExportPipelineOptions extends MarkdownRendererOptions
 	offlineResources: boolean = false;
 
 	/**
+	 * Include the fonts used by the theme and obsidian. If false, font files are left out and the page falls back to system fonts.
+	 */
+	includeFonts: boolean = false;
+
+	/**
 	 * The name of the theme to use for the export.
 	 * If the theme does not exist, the default theme will be used.
 	*/

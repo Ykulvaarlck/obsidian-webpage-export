@@ -163,6 +163,10 @@ export const language: i18n =
 			title: "Rendi compatibile offline",
 			description: "Scarica risorse, immagini o script online per visualizzare la pagina offline o per non dipendere da una CDN."
 		},
+		includeFonts: {
+			title: "Include Fonts",
+			description: "Include the font files used by your theme and Obsidian. These can add several megabytes to the export. When disabled, the page uses system fonts instead."
+		},
 		includePluginCSS: {
 			title: "Includi CSS dai plugin",
 			description: "Includi il CSS dei seguenti plugin nell'HTML esportato. Se le funzionalità dei plugin non si visualizzano correttamente, prova ad aggiungere il plugin a questo elenco. Evita di aggiungere plugin se non noti problemi specifici, poiché più CSS aumenterà il tempo di caricamento della pagina."
