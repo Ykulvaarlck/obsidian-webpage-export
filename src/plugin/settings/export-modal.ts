@@ -49,6 +49,8 @@ export class ExportModal extends Modal
 		this.isClosed = false;
 		this.canceled = true;
 		const lang = i18n.exportModal;
+		// files picked by the caller (e.g. exporting a single file from its context menu) are a one-off selection
+		const isOneOffSelection = this.pickedFiles != undefined;
 
 		super.open();
 
@@ -318,6 +320,14 @@ export class ExportModal extends Modal
 		await Utils.waitUntil(() => this.isClosed, 60 * 60 * 1000, 10);
 		
 		this.pickedFiles = this.filePicker.getSelectedFiles();
+
+		// remember the selection for next time, unless it was a one-off selection
+		if (!this.canceled && !isOneOffSelection)
+		{
+			Settings.exportOptions.filesToExport = this.filePicker.getSelectedFilesSavePaths();
+			await SettingsPage.saveSettings();
+		}
+
 		this.filePickerModalEl.remove();
 		this.exportInfo = { canceled: this.canceled, pickedFiles: this.pickedFiles, exportPath: new Path(Settings.exportOptions.exportPath), validPath: this.validPath};
 
