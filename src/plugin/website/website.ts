@@ -15,6 +15,7 @@ import { GraphView } from "src/plugin/features/graph-view";
 import { ThemeToggle } from "src/plugin/features/theme-toggle";
 import { SearchInput } from "src/plugin/features/search-input";
 import { Utils } from "src/plugin/utils/utils";
+import { FileData } from "src/shared/website-data";
 
 
 export class Website
@@ -537,6 +538,10 @@ export class Website
 		delete this.index.websiteData.webpages;
 		addDataElement("website-metadata", this.index.websiteData);
 
+		// the same few icons (fold arrows, copy buttons...) repeat many times across pages, store each one once
+		const icons = Website.deduplicateIcons(Object.values(webpages));
+		if (icons.length > 0) addDataElement("website-icons", icons);
+
 		// create a data element with the id being the file path for each file
 		for (const [path, data] of Object.entries(webpages))
 		{
@@ -551,6 +556,46 @@ export class Website
 		}
 
 		return `<!DOCTYPE html>\n${html.documentElement.outerHTML}`;
+	}
+
+	/**
+	 * Replace svgs that repeat across the pages' html with placeholders like <svg data-wpe-icon="0"></svg>.
+	 * Returns the icons in placeholder order; the frontend swaps them back when it reads the page data.
+	 */
+	private static deduplicateIcons(pages: FileData[]): string[]
+	{
+		const svgRegex = /<svg\b[^>]*>[\s\S]*?<\/svg>/g;
+
+		const counts = new Map<string, number>();
+		for (const page of pages)
+		{
+			for (const svg of page.data?.match(svgRegex) ?? [])
+				counts.set(svg, (counts.get(svg) ?? 0) + 1);
+		}
+
+		const icons: string[] = [];
+		const iconIndex = new Map<string, number>();
+		for (const [svg, count] of counts)
+		{
+			// only worth it if the placeholder is meaningfully shorter
+			if (count < 2 || svg.length < 80) continue;
+			iconIndex.set(svg, icons.length);
+			icons.push(svg);
+		}
+
+		if (icons.length == 0) return icons;
+
+		for (const page of pages)
+		{
+			if (!page.data) continue;
+			page.data = page.data.replace(svgRegex, (svg) =>
+			{
+				const index = iconIndex.get(svg);
+				return index == undefined ? svg : `<svg data-wpe-icon="${index}"></svg>`;
+			});
+		}
+
+		return icons;
 	}
 
 	public async saveAsCombinedHTML(): Promise<void>
