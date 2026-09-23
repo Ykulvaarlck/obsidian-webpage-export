@@ -1,6 +1,8 @@
-import { Notice, TFile, TFolder } from "obsidian";
+import { Modal, Notice, Setting, TFile, TFolder } from "obsidian";
 import * as nodePath from "path";
 import { readdir, rmdir } from "fs/promises";
+import { AssetHandler } from "src/plugin/asset-loaders/asset-handler";
+import { Shared } from "src/shared/shared";
 import { Path } from "src/plugin/utils/path";
 import { ExportPreset, Settings, SettingsPage } from "src/plugin/settings/settings";
 import { Utils } from "src/plugin/utils/utils";
@@ -41,6 +43,8 @@ export class HTMLExporter
 
 		const files = info?.pickedFiles ?? overrideFiles ?? Settings.getFilesToExport();
 		const exportPath = overrideExportPath ?? info?.exportPath ?? new Path(Settings.exportOptions.exportPath);
+
+		if (!await HTMLExporter.confirmExportFolder(exportPath)) return;
 
 		const website = await HTMLExporter.exportFiles(files, exportPath, true, Settings.deleteOldFiles);
 
@@ -158,6 +162,51 @@ export class HTMLExporter
 				directory = nodePath.dirname(directory);
 			}
 		}
+	}
+
+	/**
+	 * Ask before exporting into a folder that has other things in it, since exporting can overwrite files there.
+	 * Folders that only contain a previous export are fine.
+	 */
+	private static async confirmExportFolder(exportPath: Path): Promise<boolean>
+	{
+		const folder = exportPath.absoluted().pathname;
+
+		let entries: string[];
+		try
+		{
+			entries = await readdir(folder);
+		}
+		catch
+		{
+			return true; // the folder doesn't exist yet
+		}
+
+		if (entries.length == 0) return true;
+
+		const metadataPath = exportPath.join(AssetHandler.libraryPath).joinString(Shared.metadataFileName);
+		if (metadataPath.exists) return true;
+
+		const singleFileName = (Settings.exportOptions.siteName ?? "") + ".html";
+		if (Settings.exportOptions.combineAsSingleFile && entries.every((entry) => entry == singleFileName)) return true;
+
+		return await new Promise<boolean>((resolve) =>
+		{
+			const modal = new Modal(app);
+			let confirmed = false;
+			modal.titleEl.setText("Export folder is not empty");
+			modal.contentEl.createEl("p", { text: `"${folder}" already contains ${entries.length} item(s) that were not created by a previous export. Exporting there can overwrite files with the same names.` });
+			modal.contentEl.createEl("p", { text: "It's safer to export into an empty folder." });
+			new Setting(modal.contentEl)
+				.addButton((button) => button.setButtonText("Cancel").onClick(() => modal.close()))
+				.addButton((button) => button.setButtonText("Export anyway").setWarning().onClick(() =>
+				{
+					confirmed = true;
+					modal.close();
+				}));
+			modal.onClose = () => resolve(confirmed);
+			modal.open();
+		});
 	}
 
 	public static async exportFolder(folder: TFolder, rootExportPath: Path, saveFiles: boolean, clearDirectory: boolean) : Promise<Website | undefined>
