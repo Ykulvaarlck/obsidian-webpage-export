@@ -27,7 +27,7 @@ async function loadIncludes()
 				const dataEl = document.getElementById(btoa(encodeURI(includePath)));
 				if (dataEl)
 				{
-					const data = JSON.parse(decodeURI(atob(dataEl.getAttribute("value") ?? "")));
+					const data = JSON.parse(dataEl.textContent ?? "");
 					includeText = data?.data ?? "";
 				}
 			}

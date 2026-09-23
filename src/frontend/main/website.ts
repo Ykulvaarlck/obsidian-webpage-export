@@ -474,7 +474,7 @@ export class ObsidianWebsite {
 	public getLocalDataFromId(id: string): any | undefined {
 		const el = document.getElementById(id);
 		if (!el) return;
-		return JSON.parse(decodeURI(atob(el.getAttribute("value") ?? "")));
+		return JSON.parse(el.textContent ?? "");
 	}
 
 	private cachedWebpageDataMap: Map<string, WebpageData> = new Map();

@@ -509,33 +509,35 @@ export class Website
 		// insert head references
 		html.head.innerHTML += AssetHandler.getHeadReferences(this.exportOptions);
 
-		// define metadata
-		let metadataScript = html.head.createEl("data");
-		metadataScript.id = "website-metadata";
+		// store data as plain json in script tags. Escaping "<" keeps "</script>" inside the data from closing the tag.
+		const addDataElement = (id: string, data: any) =>
+		{
+			const dataElement = html.head.createEl("script");
+			dataElement.type = "application/json";
+			dataElement.id = id;
+			dataElement.textContent = JSON.stringify(data).replaceAll("<", "\\u003c");
+		}
 
+		// define metadata
 		const fileInfo = this.index.websiteData.fileInfo;
 		const webpages = this.index.websiteData.webpages;
 		// @ts-ignore
 		delete this.index.websiteData.fileInfo;
 		// @ts-ignore
 		delete this.index.websiteData.webpages;
-		metadataScript.setAttribute("value", btoa(encodeURI(JSON.stringify(this.index.websiteData))));
+		addDataElement("website-metadata", this.index.websiteData);
 
 		// create a data element with the id being the file path for each file
 		for (const [path, data] of Object.entries(webpages))
 		{
-			const dataElement = html.head.createEl("data");
-			dataElement.id = btoa(encodeURI(path));
-			dataElement.setAttribute("value", btoa(encodeURI(JSON.stringify(data))));
+			addDataElement(btoa(encodeURI(path)), data);
 		}
 
 		// do the same for file info skipping already existing elements
 		for (const [path, data] of Object.entries(fileInfo))
 		{
 			if (html.getElementById(btoa(encodeURI(path)))) continue;
-			const dataElement = html.head.createEl("data");
-			dataElement.id = btoa(encodeURI(path));
-			dataElement.setAttribute("value", btoa(encodeURI(JSON.stringify(data))));
+			addDataElement(btoa(encodeURI(path)), data);
 		}
 
 		return `<!DOCTYPE html>\n${html.documentElement.outerHTML}`;

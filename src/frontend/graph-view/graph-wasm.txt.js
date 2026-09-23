@@ -234,7 +234,7 @@ function getBinaryPromise(binaryFile)
 				const dataEl = document.getElementById(id);
 				if (dataEl)
 				{
-					const data = Uint8Array.from(Array.from(atob(JSON.parse(decodeURI(atob(dataEl.value))).data)).map(s => s.charCodeAt(0)));
+					const data = Uint8Array.from(Array.from(atob(JSON.parse(dataEl.textContent).data)).map(s => s.charCodeAt(0)));
 					resolve(data);
 				}
 			});
