@@ -429,6 +429,18 @@ export class Index
 		Promise.all(promises);
 	}
 
+	/**
+	 * The description is only used for the page's meta description, but when a note has no description it is the note's whole content as html.
+	 * Keep a short plain text version instead. (The RSS feed uses the full content separately.)
+	 */
+	private static shortenDescription(description: string, maxLength: number = 200): string
+	{
+		// DOMParser creates an inert document, so nothing in the html is loaded or run
+		const parsed = new DOMParser().parseFromString(description, "text/html");
+		const text = (parsed.body.textContent ?? "").replace(/\s+/g, " ").trim();
+		return text.length > maxLength ? text.substring(0, maxLength - 1).trimEnd() + "…" : text;
+	}
+
 	private async addWebpageToWebsiteData(webpage: Webpage)
 	{
 		if (webpage.sourcePath && this.websiteData)
@@ -436,7 +448,7 @@ export class Index
 			const webpageInfo: WebpageData = {} as WebpageData;
 			webpageInfo.title = webpage.title;
 			webpageInfo.icon = webpage.icon;
-			webpageInfo.description = webpage.outputData.descriptionOrShortenedContent;
+			webpageInfo.description = Index.shortenDescription(webpage.outputData.descriptionOrShortenedContent);
 			webpageInfo.aliases = webpage.outputData.aliases;
 			webpageInfo.inlineTags = webpage.outputData.inlineTags;
 			webpageInfo.frontmatterTags = webpage.outputData.frontmatterTags;
