@@ -474,7 +474,25 @@ export class ObsidianWebsite {
 	public getLocalDataFromId(id: string): any | undefined {
 		const el = document.getElementById(id);
 		if (!el) return;
-		return JSON.parse(el.textContent ?? "");
+		const data = JSON.parse(el.textContent ?? "");
+
+		// repeated icons are stored once, swap the placeholders back in
+		if (typeof data?.data == "string" && data.data.includes("data-wpe-icon")) {
+			const icons = this.getLocalIcons();
+			data.data = data.data.replace(/<svg data-wpe-icon="(\d+)"><\/svg>/g,
+				(placeholder: string, index: string) => icons[Number(index)] ?? placeholder);
+		}
+
+		return data;
+	}
+
+	private localIcons: string[] | undefined = undefined;
+	private getLocalIcons(): string[] {
+		if (!this.localIcons) {
+			const el = document.getElementById("website-icons");
+			this.localIcons = el ? JSON.parse(el.textContent ?? "[]") : [];
+		}
+		return this.localIcons ?? [];
 	}
 
 	private cachedWebpageDataMap: Map<string, WebpageData> = new Map();
