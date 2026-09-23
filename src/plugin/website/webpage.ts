@@ -518,7 +518,8 @@ export class Webpage extends Attachment
 		if (this.exportOptions.addMathjaxStyles && this.type != DocumentType.Attachment && this.viewElement)
 		{
 			await AssetHandler.mathjaxStyles.load();
-			const mathStyles = AssetHandler.mathjaxStyles.getStylesFor(this.viewElement);
+			// in a single file the fonts are shared by all pages, so they are added once in the head instead
+			const mathStyles = AssetHandler.mathjaxStyles.getStylesFor(this.viewElement, this.exportOptions.combineAsSingleFile);
 			if (mathStyles)
 			{
 				const mathStyleEl = document.createElement("style");
