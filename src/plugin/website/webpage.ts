@@ -515,13 +515,17 @@ export class Webpage extends Attachment
 		}
 
 		// add math styles to the document. They are here and not in <head> because they are unique to each document
-		if (this.exportOptions.addMathjaxStyles && this.type != DocumentType.Attachment)
+		if (this.exportOptions.addMathjaxStyles && this.type != DocumentType.Attachment && this.viewElement)
 		{
-			const mathStyleEl = document.createElement("style");
-			mathStyleEl.id = "MJX-CHTML-styles";
 			await AssetHandler.mathjaxStyles.load();
-			mathStyleEl.innerHTML = AssetHandler.mathjaxStyles.data as string;
-			this.viewElement?.prepend(mathStyleEl);
+			const mathStyles = AssetHandler.mathjaxStyles.getStylesFor(this.viewElement);
+			if (mathStyles)
+			{
+				const mathStyleEl = document.createElement("style");
+				mathStyleEl.id = "MJX-CHTML-styles";
+				mathStyleEl.innerHTML = mathStyles;
+				this.viewElement.prepend(mathStyleEl);
+			}
 		}
 
 		// inject outline
