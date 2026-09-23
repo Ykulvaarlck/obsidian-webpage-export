@@ -520,13 +520,14 @@ export class Website
 			mathFontsEl.textContent = mathFonts;
 		}
 
-		// store data as plain json in script tags. Escaping "<" keeps "</script>" inside the data from closing the tag.
+		// store data as plain json in script tags. Only "</" (could close the tag) and "<!--" (changes how the script is parsed) need escaping,
+		// "<\/" and "<" are both still valid json.
 		const addDataElement = (id: string, data: any) =>
 		{
 			const dataElement = html.head.createEl("script");
 			dataElement.type = "application/json";
 			dataElement.id = id;
-			dataElement.textContent = JSON.stringify(data).replaceAll("<", "\\u003c");
+			dataElement.textContent = JSON.stringify(data).replaceAll("<!--", "\\u003c!--").replaceAll("</", "<\\/");
 		}
 
 		// define metadata
