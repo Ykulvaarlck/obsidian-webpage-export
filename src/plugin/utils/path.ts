@@ -3,7 +3,6 @@ import { Stats, existsSync, statSync, promises as fs } from 'fs';
 import { FileSystemAdapter } from 'obsidian';
 import internal from 'stream'; 
 import { homedir, platform } from 'os';
-import { readdir, rmdir } from 'fs/promises';
 import { i18n } from '../translations/language';
 
 export class Path
@@ -986,52 +985,6 @@ export class Path
 	static slugify(path: string): string
 	{
 		return path.replaceAll(" ", "-").replaceAll(/-{2,}/g, "-").toLowerCase();
-	}
-
-	/**
-	 * Recursively removes empty directories from the given directory.
-	 *
-	 * If the directory itself is empty, it is also removed.
-	 *
-	 * Code taken from: https://gist.github.com/jakub-g/5903dc7e4028133704a4
-	 *
-	 * @param {string} directory Path to the directory to clean up
-	 */
-	public static async removeEmptyDirectories(directory: string): Promise<void>
-	{
-		const path = new Path(directory);
-		if (!path.isDirectory || !path.exists || path.isFile) 
-			return;
-
-		try
-		{
-			const stats = await fs.stat(directory);
-			if (!stats?.isDirectory()) 
-				return;
-
-			let fileNames = await readdir(directory);
-			if (fileNames.length > 0) {
-				const recursiveRemovalPromises = fileNames.map((fileName) => 
-				{
-					const newPath = path.joinString(fileName).path;
-					return this.removeEmptyDirectories(newPath);
-				});
-				await Promise.all(recursiveRemovalPromises);
-
-				// re-evaluate fileNames; after deleting subdirectory
-				// we may have parent directory empty now
-				fileNames = await readdir(directory);
-			}
-
-			if (fileNames.length === 0) 
-			{
-				await rmdir(directory);
-			}
-		}
-		catch (error)
-		{
-			Path.log("Problem removing directory", error, "warn");
-		}
 	}
 
 }
