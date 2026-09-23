@@ -286,6 +286,13 @@ export class AssetHandler
 
 		let content = asset.data.replaceAll("app://obsidian.md/", "");
 
+		// drop font faces that load a font file, so the page falls back to system fonts. Keep mathjax fonts so math still renders correctly.
+		if (!this.exportOptions.includeFonts)
+		{
+			content = content.replace(/@font-face\s*\{[^}]*\}/g, (fontFace) =>
+				(/url\(/.test(fontFace) && !/font-family:\s*["']?MJX/.test(fontFace)) ? "" : fontFace);
+		}
+
 		let urls = Array.from(content.matchAll(/url\("([^"]+)"\)|url\('([^']+)'\)/g));
 
 		// remove duplicates
