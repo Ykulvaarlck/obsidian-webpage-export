@@ -1,11 +1,13 @@
 import { AssetLoader } from "./base-asset.js";
 import { AssetType, InlinePolicy, Mutability } from "./asset-types.js";
+import postcss from "postcss";
+import safeParser from "postcss-safe-parser";
 
 export class MathjaxStyles extends AssetLoader
 {
 	private mathjaxStylesheet: CSSStyleSheet | undefined = undefined;
 	private lastMathjaxChanged: number = -1;
-	private rules: string[] = [];
+	private nodes: postcss.ChildNode[] = [];
 
     constructor()
     {
@@ -39,8 +41,8 @@ export class MathjaxStyles extends AssetLoader
         this.lastMathjaxChanged = changed;
         await super.load();
 
-        // one rule per line (cssText is serialized on a single line)
-        this.rules = (this.data as string).split("\n").filter((rule) => rule.trim() != "");
+        // the data is minified by now, so parse it instead of splitting it into lines
+        this.nodes = safeParser(this.data as string).nodes;
     }
 
 	/**
@@ -59,11 +61,12 @@ export class MathjaxStyles extends AssetLoader
 			glyph.classList.forEach((cls) => { if (cls.startsWith("mjx-c")) usedGlyphs.add(cls); });
 		});
 
-		return this.rules.filter((rule) =>
+		return this.nodes.filter((node) =>
 		{
-			const glyphs = rule.match(/\.mjx-c[0-9A-F]+\b/g);
+			if (node.type != "rule") return true;
+			const glyphs = node.selector.match(/\.mjx-c[0-9A-F]+\b/g);
 			if (!glyphs) return true;
 			return glyphs.some((glyph) => usedGlyphs.has(glyph.slice(1)));
-		}).join("\n");
+		}).map((node) => node.toString()).join("");
 	}
 }
