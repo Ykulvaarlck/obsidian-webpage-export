@@ -1,4 +1,6 @@
 import { Notice, TFile, TFolder } from "obsidian";
+import * as nodePath from "path";
+import { readdir, rmdir } from "fs/promises";
 import { Path } from "src/plugin/utils/path";
 import { ExportPreset, Settings, SettingsPage } from "src/plugin/settings/settings";
 import { Utils } from "src/plugin/utils/utils";
@@ -63,12 +65,22 @@ export class HTMLExporter
 
 			if (deleteOld)
 			{
-				let i = 0;
+				const exportRoot = nodePath.resolve(destination.absoluted().pathname);
+				const touchedDirectories = new Set<string>();
+
 				ExportLog.addToProgressCap(website.index.deletedFiles.length / 2);
 				for (const dFile of website.index.deletedFiles)
 				{
 					const path = new Path(dFile, destination.path);
-					
+					const absolutePath = nodePath.resolve(path.absoluted().pathname);
+
+					// the list of old files comes from metadata.json, never delete anything outside the export folder
+					if (!HTMLExporter.isInsideDirectory(absolutePath, exportRoot))
+					{
+						ExportLog.warning("Refusing to delete a file outside of the export folder: " + absolutePath);
+						continue;
+					}
+
 					// don't delete font files
 					// this is a hacky way to prevent it from deleting the matjax and other font files used in only certain files
 					if (path.extension == "woff" || path.extension == "woff2" || path.extension == "ttf" || path.extension == "otf")
@@ -78,11 +90,12 @@ export class HTMLExporter
 					}
 
 					await path.delete();
+					touchedDirectories.add(nodePath.dirname(absolutePath));
 					ExportLog.progress(0.5, "Deleting Old Files", "Deleting: " + path.path, "var(--color-red)");
-					i++;
 				};
 
-				await Path.removeEmptyDirectories(destination.path);
+				// only clean up folders that held the files deleted above, not every empty folder in the export folder
+				await HTMLExporter.removeEmptyParentDirectories(touchedDirectories, exportRoot);
 			}
 			
 			if (saveFiles) 
@@ -113,6 +126,38 @@ export class HTMLExporter
 		MarkdownRendererAPI.endBatch();
 
 		return website;
+	}
+
+	private static isInsideDirectory(path: string, directory: string): boolean
+	{
+		const relative = nodePath.relative(directory, path);
+		return relative != "" && !relative.startsWith("..") && !nodePath.isAbsolute(relative);
+	}
+
+	/**
+	 * Remove each of the given directories if it is empty, then its parents, stopping at the first non-empty one or at the export root.
+	 */
+	private static async removeEmptyParentDirectories(directories: Set<string>, exportRoot: string)
+	{
+		// deepest first so emptied children are gone before their parents are checked
+		const sorted = Array.from(directories).sort((a, b) => b.length - a.length);
+		for (let directory of sorted)
+		{
+			while (HTMLExporter.isInsideDirectory(directory, exportRoot))
+			{
+				try
+				{
+					if ((await readdir(directory)).length > 0) break;
+					await rmdir(directory);
+				}
+				catch (error)
+				{
+					break;
+				}
+
+				directory = nodePath.dirname(directory);
+			}
+		}
 	}
 
 	public static async exportFolder(folder: TFolder, rootExportPath: Path, saveFiles: boolean, clearDirectory: boolean) : Promise<Website | undefined>
