@@ -128,6 +128,7 @@ export class Website
 		console.log("Root path: " + rootPath);
 
 		await AssetHandler.reloadAssets(this.exportOptions);
+		AssetHandler.mathjaxStyles.resetUsedFonts();
 		this.index = new WebsiteIndex();
 		try
 		{
@@ -508,6 +509,15 @@ export class Website
 
 		// insert head references
 		html.head.innerHTML += AssetHandler.getHeadReferences(this.exportOptions);
+
+		// the mathjax fonts used by any page, shared by all of them
+		const mathFonts = AssetHandler.mathjaxStyles.getUsedFontFaces();
+		if (mathFonts)
+		{
+			const mathFontsEl = html.head.createEl("style");
+			mathFontsEl.id = "MJX-CHTML-fonts";
+			mathFontsEl.textContent = mathFonts;
+		}
 
 		// store data as plain json in script tags. Escaping "<" keeps "</script>" inside the data from closing the tag.
 		const addDataElement = (id: string, data: any) =>
