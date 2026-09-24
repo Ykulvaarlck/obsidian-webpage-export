@@ -713,6 +713,19 @@ export class Webpage extends Attachment
 		const links = this.hrefLinkElements;
 		for (const link of links) {
 			const href = link.getAttribute("href");
+
+			// external links (https:, mailto: ...) are left as they are and open in a new tab, except mailto/tel which would open an empty one
+			if (href && /^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith("app:") && !href.startsWith("data:"))
+			{
+				if (/^(mailto|tel):/i.test(href)) link.removeAttribute("target");
+				else
+				{
+					link.setAttribute("target", "_blank");
+					link.setAttribute("rel", "noopener noreferrer");
+				}
+				continue;
+			}
+
 			const newHref = this.resolveLink(href, link);
 			link.setAttribute("href", newHref ?? href ?? "");
 			link.setAttribute("target", "_self");
