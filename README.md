@@ -1,3 +1,9 @@
+needed to add some fixes and QoL features to this plugin (export size was utterly unacceptable)
+
+edits primarily made by claude. i take no liability for code quality.
+
+---
+
 # Webpage HTML Export
 
 Export html from single files, canvas pages, or whole vaults. Direct access to the exported HTML files allows you to publish your digital garden anywhere. Focuses on flexibility, features, and style parity.
