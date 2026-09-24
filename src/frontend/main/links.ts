@@ -8,7 +8,7 @@ export class LinkHandler
 		console.log("Initializing links on element", onElement);
 		onElement?.querySelectorAll(".internal-link, a.tag, a.tree-item-self, a.footnote-link").forEach(function(link: HTMLElement)
 		{
-			const target = link.getAttribute("href") ?? "null";
+			const target = LinkHandler.getLinkTarget(link) ?? "null";
 
 			if(target == "null")
 			{
@@ -16,8 +16,20 @@ export class LinkHandler
 				return;
 			}
 
+			// in a local file the href points to a file that doesn't exist, so point it at the page's url hash instead (see getLocalRouteHash).
+			// the browser can then open it in a new tab, copy it, etc. the original target is kept in data-wpe-href.
+			if (!ObsidianSite.isHttp && !target.startsWith("#") && !target.startsWith("?") && !target.startsWith("http"))
+			{
+				const pathname = LinkHandler.getPathnameFromURL(target);
+				link.setAttribute("data-wpe-href", target);
+				link.setAttribute("href", ObsidianSite.getLocalRouteHash(pathname, LinkHandler.getHashFromURL(target)));
+			}
+
 			link.addEventListener("click", function(event)
 			{
+				// ctrl/cmd/shift click opens the link in a new tab or window, let the browser handle it (middle click doesn't fire click)
+				if (event.ctrlKey || event.metaKey || event.shiftKey) return;
+
 				event.preventDefault();
 				event.stopPropagation();
 				ObsidianSite.loadURL(target);
@@ -55,6 +67,12 @@ export class LinkHandler
 				}
 			}
 		});
+	}
+
+	/** The link's original target, even after its href was changed to a url hash by initializeLinks */
+	public static getLinkTarget(link: Element): string | null
+	{
+		return link.getAttribute("data-wpe-href") ?? link.getAttribute("href");
 	}
 
 	public static getPathnameFromURL(url: string): string

@@ -303,7 +303,11 @@ export class ObsidianWebsite {
 	public getLocalRouteURL(pathname: string, header?: string): string {
 		const base = window.location.href.split("#")[0];
 		if (pathname == this.entryPage && !header) return base;
-		return base + "#/" + encodeURI(pathname) + (header ? "#" + encodeURIComponent(header) : "");
+		return base + this.getLocalRouteHash(pathname, header);
+	}
+
+	public getLocalRouteHash(pathname: string, header?: string): string {
+		return "#/" + encodeURI(pathname) + (header ? "#" + encodeURIComponent(header) : "");
 	}
 
 	/** The page (and header) from a url hash made by getLocalRouteURL, in the form loadURL takes */

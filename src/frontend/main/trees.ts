@@ -149,7 +149,7 @@ export class TreeItem
 		this.innerEl = isRoot ? itemEl : this.selfEl.querySelector(".tree-item-inner") as HTMLElement;
 		this.childrenEl = isRoot ? itemEl : itemEl.querySelector(".tree-item-children") as HTMLElement;
 
-		const hrefAttr = this.selfEl.getAttribute("href");
+		const hrefAttr = LinkHandler.getLinkTarget(this.selfEl);
 		if (hrefAttr) this.path = hrefAttr;
 		this.children = [];
 		const childItems = Array.from(this.childrenEl.children).filter((el) => el.classList.contains("tree-item"));
