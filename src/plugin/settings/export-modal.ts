@@ -299,7 +299,7 @@ export class ExportModal extends Modal
 		fileInput.addButton((button) => {
 			exportButton = button;
 			setExportDisabled(!this.validPath);
-			button.setButtonText(lang.exportButton).onClick(async () =>
+			button.setButtonText(lang.exportButton).setCta().onClick(async () =>
 			{
 				this.canceled = false;
 				this.close();

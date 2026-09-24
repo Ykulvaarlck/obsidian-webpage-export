@@ -29,7 +29,7 @@ export const language: i18n =
 		{
 			title: "Select all files in exported vault",
 			selectAll: "Select All",
-			save: "Save",
+			save: "Save selection",
 		},
 		currentSite: 
 		{
