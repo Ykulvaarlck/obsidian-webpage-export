@@ -261,16 +261,31 @@ export class ObsidianWebsite {
 				initialPath
 			);
 		}
+		else {
+			this.setLocalHistoryState(this.document.pathname, "", true);
+		}
 
 		this.isLoaded = true;
 		this.onloadCallbacks.forEach((cb) => cb(this.document));
+
+		// open the page from the url hash, e.g. after a reload or from a bookmark
+		const route = this.isHttp ? undefined : this.getRouteFromHash();
+		if (route) {
+			await this.loadURL(route, false);
+			this.setLocalHistoryState(this.document.pathname, LinkHandler.getHashFromURL(route), true);
+		}
 	}
 
 	private initEvents() {
 		window.addEventListener("popstate", async (e) => {
 			console.log("popstate", e);
-			if (!e.state) return;
-			const pathname = e.state.pathname;
+			if (!e.state) {
+				// the hash was edited by hand
+				const route = ObsidianSite.isHttp ? undefined : ObsidianSite.getRouteFromHash();
+				if (route) await ObsidianSite.loadURL(route, false);
+				return;
+			}
+			const pathname = e.state.pathname + (e.state.header ? "#" + e.state.header : "");
 			await ObsidianSite.loadURL(pathname, false);
 		});
 
@@ -279,6 +294,36 @@ export class ObsidianWebsite {
 			localThis.onResize();
 		});
 		this.onResize();
+	}
+
+	/**
+	 * In a local file the url can't point to other pages, so the current page and header are kept in the hash instead,
+	 * e.g. site.html#/folder/page.html#Header_0. This makes back/forward, reloading and bookmarks work.
+	 */
+	public getLocalRouteURL(pathname: string, header?: string): string {
+		const base = window.location.href.split("#")[0];
+		if (pathname == this.entryPage && !header) return base;
+		return base + "#/" + encodeURI(pathname) + (header ? "#" + encodeURIComponent(header) : "");
+	}
+
+	/** The page (and header) from a url hash made by getLocalRouteURL, in the form loadURL takes */
+	private getRouteFromHash(): string | undefined {
+		const hash = window.location.hash;
+		if (!hash.startsWith("#/")) return undefined;
+		const [pathname, header] = hash.substring(2).split("#");
+		if (!pathname) return undefined;
+		try {
+			return decodeURI(pathname) + (header ? "#" + decodeURIComponent(header) : "");
+		} catch {
+			return undefined;
+		}
+	}
+
+	private setLocalHistoryState(pathname: string, header: string = "", replace: boolean = false) {
+		const state = { pathname, header };
+		const url = this.getLocalRouteURL(pathname, header);
+		if (replace) history.replaceState(state, "", url);
+		else history.pushState(state, "", url);
 	}
 
 	public updateMetaTag(name: string, content: string) {
@@ -308,7 +353,14 @@ export class ObsidianWebsite {
 
 		// if this document is already loaded
 		if (this.document.pathname == url) {
-			if (header) this.document.scrollToHeader(header);
+			if (header) {
+				this.document.scrollToHeader(header);
+				if (!this.isHttp && pushState) this.setLocalHistoryState(url, header);
+			}
+			else if (!pushState) {
+				// going back from one of this page's headers to its top
+				this.document.documentEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+			}
 			else {
 				new Notice("This page is already loaded.");
 			}
@@ -356,6 +408,9 @@ export class ObsidianWebsite {
 				this.document.title,
 				currentPath
 			);
+		}
+		else if (this.document && !this.isHttp && pushState) {
+			this.setLocalHistoryState(this.document.pathname, header);
 		}
 
 		// update outline - TODO: make this a dynamic inserted feature
