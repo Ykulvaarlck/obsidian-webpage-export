@@ -65,9 +65,13 @@ export class ExportModal extends Modal
 			this.filePickerModalEl.style.margin = "10px";
 			this.filePickerModalEl.style.maxHeight = "80%";
 			this.filePickerModalEl.style.boxShadow = "0 0 7px 1px inset #00000060";
-			
+			// the tree fills the space left over by the footer with the save button
+			this.filePickerModalEl.style.display = "flex";
+			this.filePickerModalEl.style.flexDirection = "column";
+
 			const scrollArea = this.filePickerModalEl.createDiv({ cls: 'tree-scroll-area' });
-			scrollArea.style.height = "100%";
+			scrollArea.style.flex = "1 1 auto";
+			scrollArea.style.minHeight = "0";
 			scrollArea.style.width = "100%";
 			scrollArea.style.overflowY = "auto";
 			scrollArea.style.overflowX = "hidden";
@@ -103,7 +107,8 @@ export class ExportModal extends Modal
 			});
 
 			saveFiles.settingEl.style.border = "none";
-			saveFiles.settingEl.style.marginRight = "1em";
+			saveFiles.settingEl.style.flex = "0 0 auto";
+			saveFiles.settingEl.style.padding = "0.75em 1em";
 		}
 
 
@@ -294,7 +299,7 @@ export class ExportModal extends Modal
 		fileInput.addButton((button) => {
 			exportButton = button;
 			setExportDisabled(!this.validPath);
-			button.setButtonText(lang.exportButton).onClick(async () => 
+			button.setButtonText(lang.exportButton).onClick(async () =>
 			{
 				this.canceled = false;
 				this.close();
